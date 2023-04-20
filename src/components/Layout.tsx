@@ -1,4 +1,10 @@
-import { AdbOutlined, Close, Menu as MenuIcon } from "@mui/icons-material";
+import {
+  AdbOutlined,
+  Brightness4Rounded,
+  Brightness7Rounded,
+  Close,
+  Menu as MenuIcon,
+} from "@mui/icons-material";
 import {
   AppBar,
   Box,
@@ -10,21 +16,28 @@ import {
   IconButton,
   Button,
   Tooltip,
-  Avatar,
   useTheme,
 } from "@mui/material";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import React, { useContext } from "react";
+import { motion } from "framer-motion";
+import Image from "next/image";
 
 import { ColorModeContext } from "@/theme/ThemeWrapper";
-import SunIcon from "./icons/SunIcon";
 
-const pages = ["Products", "Pricing", "Blog"];
-const settings = ["Profile", "Account", "Dashboard", "Logout"];
+const pages = [
+  { name: "Home", href: "/" },
+  { name: "Features", href: "/features" },
+  { name: "About Us", href: "/about" },
+  { name: "Contact Us", href: "/contact" },
+];
+const settings = ["Account", "Dashboard", "Logout"];
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const { data: sessionData } = useSession();
+  const router = useRouter();
   const theme = useTheme();
   const { toggleColorMode } = useContext(ColorModeContext);
 
@@ -58,7 +71,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     <>
       <AppBar
         position="fixed"
-        enableColorOnDark
         elevation={0}
         color="transparent"
         sx={{
@@ -123,14 +135,14 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 }}
                 PaperProps={{
                   sx: {
-                    border: "1px solid #ccc",
+                    border: (theme) => "1px solid " + theme.palette.divider,
                   },
                 }}
                 elevation={0}
               >
                 {pages.map((page) => (
-                  <MenuItem key={page} onClick={handleCloseNavMenu}>
-                    <Typography textAlign="center">{page}</Typography>
+                  <MenuItem key={page.href} onClick={handleCloseNavMenu}>
+                    <Typography textAlign="center">{page.name}</Typography>
                   </MenuItem>
                 ))}
               </Menu>
@@ -165,11 +177,22 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             >
               {pages.map((page) => (
                 <Button
-                  key={page}
+                  key={page.href}
                   onClick={handleCloseNavMenu}
-                  sx={{ my: 2, display: "block", color: "white" }}
+                  sx={{
+                    my: 2,
+                    display: "block",
+                    color: "white",
+                    backgroundColor: (theme) =>
+                      router.pathname === page.href
+                        ? theme.palette.divider
+                        : "transparent",
+                    textAlign: "center",
+                  }}
+                  component={Link}
+                  href={page.href}
                 >
-                  {page}
+                  {page.name}
                 </Button>
               ))}
             </Box>
@@ -183,13 +206,20 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 alignItems: "center",
               }}
             >
-              <IconButton onClick={toggleColorMode}>
-                <SunIcon
-                  fontSize="medium"
-                  height={48}
-                  mode={theme.palette.mode}
-                />
-              </IconButton>
+              <motion.div
+                whileTap={{ scale: 0.9, rotate: "135deg" }}
+                transition={{
+                  type: "tween",
+                }}
+              >
+                <IconButton onClick={toggleColorMode}>
+                  {theme.palette.mode === "dark" ? (
+                    <Brightness4Rounded />
+                  ) : (
+                    <Brightness7Rounded />
+                  )}
+                </IconButton>
+              </motion.div>
               {!sessionData?.user ? (
                 <Button
                   sx={{ my: 2, display: "block", color: "white" }}
@@ -200,14 +230,26 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 </Button>
               ) : (
                 <>
-                  <Tooltip title="Open settings">
-                    <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                      <Avatar
-                        alt={sessionData.user.name ?? "Avatar"}
-                        src={sessionData.user.image ?? ""}
-                      />
-                    </IconButton>
-                  </Tooltip>
+                  <motion.div
+                    whileTap={{ scale: 0.8 }}
+                    transition={{
+                      type: "tween",
+                    }}
+                  >
+                    <Tooltip title="Open settings">
+                      <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                        <Image
+                          alt={sessionData.user.name ?? "Avatar"}
+                          src={sessionData.user.image ?? ""}
+                          width={40}
+                          height={40}
+                          style={{
+                            borderRadius: "50%",
+                          }}
+                        />
+                      </IconButton>
+                    </Tooltip>
+                  </motion.div>
                   <Menu
                     sx={{ mt: "45px" }}
                     id="menu-appbar"
@@ -225,7 +267,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     onClose={handleCloseUserMenu}
                     PaperProps={{
                       sx: {
-                        border: "1px solid #ccc",
+                        border: (theme) => "1px solid " + theme.palette.divider,
                       },
                     }}
                     elevation={0}
